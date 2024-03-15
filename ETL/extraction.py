@@ -2,19 +2,28 @@ from serpapi import GoogleSearch
 import json
 from dotenv import load_dotenv
 import os
+from datetime import datetime
 
+# Load environment variables
 load_dotenv()
 
+# Retrieve API key from .env file
 API_KEY = os.getenv("API_KEY")
 
+# Get the current datetime for file naming
+current_datetime = datetime.now().strftime("%m_%d_%Y")
 
-def get_latest_jobs():
+
+def get_latest_jobs(page_number=1, page_size=10):
+    offset = (page_number - 1) * page_size
+
     # Define the search parameters
     params = {
         "engine": "google_jobs",
-        "q": "Data Analyst",  # Make sure to use the function's query parameter
+        "q": "Data Engineer | Analytics Engineer",
         "hl": "en",
         "chips": "date_posted:week",
+        "start": offset,
         "api_key": API_KEY,
     }
 
@@ -27,7 +36,7 @@ def get_latest_jobs():
     print(f"Jobs Results: {jobs_results}")
 
     # Define the file path
-    file_path = "./raw_data/latest_jobs.json"
+    file_path = f"../raw_data/latest_jobs_{current_datetime}.json"
 
     # Ensure the directory exists
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
@@ -41,3 +50,21 @@ def get_latest_jobs():
         print(f"Error saving file: {e}")
 
     return jobs_results
+
+
+def main():
+    # Calculate the number of searches you can perform weekly within the limit
+    searches_per_month = 100
+    weeks_per_month = 4  # Approximate
+    searches_per_week = searches_per_month // weeks_per_month
+
+    # Default page size returns 10 jobs
+    page_size = 10
+
+    # Perform searches up to the weekly limit
+    for page_number in range(1, searches_per_week + 1):
+        get_latest_jobs(page_number, page_size)
+
+
+if __name__ == "__main__":
+    main()
